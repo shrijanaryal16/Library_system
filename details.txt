@@ -1,0 +1,49 @@
+firstpage.py, firstpage.ui:
+Object names:
+textBrowser
+startLibrarian
+startUser
+
+secondpage.py secondpage.ui:
+login
+createaccount
+
+thirdpage.py, thirdpage.ui:
+emailButton
+emailText
+passwordButton
+passwordText
+loginButton
+
+forthpage.py, forthpage.ui:
+fname
+fnameText
+lname
+lnameText
+eid
+eidText
+zid
+zidText
+cpassword
+cpasswordText
+rpassword
+rpasswordText
+caccountButton
+
+user.py, user.ui:
+ulabel
+ubrowse_books
+uborrow_history
+umy_profile
+ufines
+
+librarian.py, librarian.ui:
+llabel
+lborrow_history
+lmanage_books
+lmanage_members
+ltransactions
+lbook_catalog
+
+
+
