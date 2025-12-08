@@ -1,4 +1,5 @@
 
+
 def first():
     from PySide6.QtCore import (QCoreApplication, QMetaObject, Qt)
     from PySide6.QtGui import (QCursor)
@@ -67,6 +68,18 @@ def first():
             self.horizontalLayout.addWidget(self.startUser)
 
             self.verticalLayout.addLayout(self.horizontalLayout)
+            
+            # --- EXIT BUTTON ---
+            self.btnExit = QPushButton("Exit System", self.centralwidget)
+            self.btnExit.setCursor(QCursor(Qt.PointingHandCursor))
+            self.btnExit.setStyleSheet("""
+                QPushButton {
+                    background-color: transparent; color: #7f8c8d; border: none; font-size: 14px; margin-top: 20px;
+                }
+                QPushButton:hover { color: #c0392b; font-weight: bold; }
+            """)
+            self.verticalLayout.addWidget(self.btnExit, alignment=Qt.AlignCenter)
+
             self.verticalSpacer2 = QSpacerItem(20, 60, QSizePolicy.Minimum, QSizePolicy.Expanding)
             self.verticalLayout.addItem(self.verticalSpacer2)
 
@@ -74,20 +87,19 @@ def first():
             self.MainWindow.setWindowTitle(u"Library System")
             QMetaObject.connectSlotsByName(self.MainWindow)
 
-            # --- NAVIGATION ---
+            # Connections
             self.startLibrarian.clicked.connect(self.openLibrarianPage)
             self.startUser.clicked.connect(self.openUserPage)
+            self.btnExit.clicked.connect(self.MainWindow.close)
 
         def openLibrarianPage(self):
             from ui.secondpage import second
-            # We pass "librarian" to the next page
             self.window = second("librarian")
             self.window.show()
             self.MainWindow.hide()
 
         def openUserPage(self):
             from ui.secondpage import second
-            # We pass "user" to the next page
             self.window = second("user")
             self.window.show()
             self.MainWindow.hide()
@@ -97,7 +109,7 @@ def first():
     MainWindow = QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
-    # We must start the loop here since this is the entry point
     MainWindow.show()
     app.exec()
+
 

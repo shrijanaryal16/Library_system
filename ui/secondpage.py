@@ -1,6 +1,6 @@
 
 
-def second(role_type): # Accepts the role from Page 1
+def second(role_type):
     from PySide6.QtCore import (QCoreApplication, QMetaObject, Qt)
     from PySide6.QtGui import (QCursor)
     from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout,
@@ -9,7 +9,7 @@ def second(role_type): # Accepts the role from Page 1
     class Ui_MainWindow(object):
         def setupUi(self, MainWindow):
             self.MainWindow = MainWindow
-            self.current_role = role_type # Store it
+            self.current_role = role_type
 
             if not self.MainWindow.objectName():
                 self.MainWindow.setObjectName(u"MainWindow")
@@ -75,6 +75,13 @@ def second(role_type): # Accepts the role from Page 1
             self.horizontalLayout.addWidget(self.createaccount)
 
             self.verticalLayout.addLayout(self.horizontalLayout)
+            
+            # --- GO BACK BUTTON ---
+            self.btnBack = QPushButton("Go Back", self.centralwidget)
+            self.btnBack.setCursor(QCursor(Qt.PointingHandCursor))
+            self.btnBack.setStyleSheet("background-color: transparent; color: #7f8c8d; border: none; margin-top: 20px;")
+            self.verticalLayout.addWidget(self.btnBack, alignment=Qt.AlignCenter)
+
             self.verticalSpacer2 = QSpacerItem(20, 50, QSizePolicy.Minimum, QSizePolicy.Expanding)
             self.verticalLayout.addItem(self.verticalSpacer2)
 
@@ -84,23 +91,31 @@ def second(role_type): # Accepts the role from Page 1
 
             self.login.clicked.connect(self.loginPage)
             self.createaccount.clicked.connect(self.createaccountPage)
+            self.btnBack.clicked.connect(self.goBack)
             self.new_window = None
 
         def loginPage(self):
             from ui.thirdpage import third
-            # Passing the role to the third page
             self.new_window = third(self.current_role)
             self.new_window.show()
             self.MainWindow.close()
 
         def createaccountPage(self):
             from ui.forthpage import forth
-            self.new_window = forth()
+            # Pass role to registration so we create the correct account type
+            self.new_window = forth(self.current_role) 
             self.new_window.show()
             self.MainWindow.close()
+
+        def goBack(self):
+            from ui.firstpage import first
+            self.MainWindow.close()
+            import sys, subprocess
+            subprocess.Popen([sys.executable, 'main.py'])
 
     window = QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(window)
     window.ui = ui
     return window
+

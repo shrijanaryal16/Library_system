@@ -1,28 +1,39 @@
 
+
 import sqlite3
 import datetime
 
+
+DB_NAME = "library.db"
+
 def init_db():
-    conn = sqlite3.connect("credentials.db")
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     
+    # 1. Students Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS students (
             first_name TEXT NOT NULL,
             last_name  TEXT NOT NULL,
             email  TEXT NOT NULL UNIQUE,
             zip_code INTEGER,
-            password TEXT NOT NULL
+            password TEXT NOT NULL,
+            phone TEXT,
+            role TEXT NOT NULL
         )
     """)
 
+    # 2. Books Database 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS books (
             book_name TEXT PRIMARY KEY,
-            status TEXT NOT NULL
+            status TEXT NOT NULL,
+            isbn TEXT,
+            author TEXT
         )
     """)
 
+    # 3. Active Borrows
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS active_borrows (
             book_name TEXT NOT NULL,
@@ -33,6 +44,7 @@ def init_db():
         )
     """)
 
+    # 4. Borrow History
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS borrow_history (
             book_name TEXT NOT NULL,
@@ -45,14 +57,13 @@ def init_db():
     conn.commit()
     conn.close()
 
-#  Students
 
-def insert_student(fname, lname, email, zip_code, password):
+def insert_student(fname, lname, email, zip_code, password, phone, role):
     try:
-        conn = sqlite3.connect("credentials.db")
+        conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO students VALUES (?, ?, ?, ?, ?)",
-                       (fname, lname, email, zip_code, password))
+        cursor.execute("INSERT INTO students VALUES (?, ?, ?, ?, ?, ?, ?)",
+                       (fname, lname, email, zip_code, password, phone, role))
         conn.commit()
         conn.close()
         return "Success"
@@ -62,27 +73,25 @@ def insert_student(fname, lname, email, zip_code, password):
         return f"Error: {e}"
 
 def remove_student(email):
-    conn = sqlite3.connect("credentials.db")
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("DELETE FROM students WHERE email = ?", (email,))
-    rows_affected = cursor.rowcount
+    rows = cursor.rowcount
     conn.commit()
     conn.close()
-    if rows_affected > 0:
-        return "Success"
-    else:
-        return "Error: User not found."
+    return "Success" if rows > 0 else "Error: User not found."
 
-def check_login(email, password):
-    conn = sqlite3.connect("credentials.db")
+def check_login(email, password, role):
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM students WHERE email = ? AND password = ?", (email, password))
+    # Here, things must match while logging in
+    cursor.execute("SELECT * FROM students WHERE email = ? AND password = ? AND role = ?", (email, password, role))
     user = cursor.fetchone()
     conn.close()
     return True if user else False
 
 def get_student_details(email):
-    conn = sqlite3.connect("credentials.db")
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM students WHERE email = ?", (email,))
     user = cursor.fetchone()
@@ -90,20 +99,20 @@ def get_student_details(email):
     return user
 
 def get_all_students():
-    conn = sqlite3.connect("credentials.db")
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    cursor.execute("SELECT first_name, last_name, email FROM students")
+    cursor.execute("SELECT first_name, last_name, email, phone, role FROM students")
     data = cursor.fetchall()
     conn.close()
     return data
 
-# Books database
+# Add books
 
-def add_book(book_name):
+def add_book(book_name, isbn, author):
     try:
-        conn = sqlite3.connect("credentials.db")
+        conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO books VALUES (?, ?)", (book_name, "Available"))
+        cursor.execute("INSERT INTO books VALUES (?, ?, ?, ?)", (book_name, "Available", isbn, author))
         conn.commit()
         conn.close()
         return "Success"
@@ -111,7 +120,7 @@ def add_book(book_name):
         return "Error: Book already exists."
 
 def remove_book(book_name):
-    conn = sqlite3.connect("credentials.db")
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("DELETE FROM books WHERE book_name = ?", (book_name,))
     conn.commit()
@@ -119,7 +128,7 @@ def remove_book(book_name):
     return "Success"
 
 def get_all_books():
-    conn = sqlite3.connect("credentials.db")
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM books")
     data = cursor.fetchall()
@@ -129,7 +138,7 @@ def get_all_books():
 # Borrow and return
 
 def borrow_book(book_name, user_email, due_date_str=None):
-    conn = sqlite3.connect("credentials.db")
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     
     cursor.execute("SELECT status FROM books WHERE book_name = ?", (book_name,))
@@ -145,8 +154,6 @@ def borrow_book(book_name, user_email, due_date_str=None):
     cursor.execute("UPDATE books SET status = 'Borrowed' WHERE book_name = ?", (book_name,))
 
     today = datetime.date.today()
-    
-    # Logic for Due Date
     if due_date_str:
         due_date = due_date_str
     else:
@@ -163,7 +170,7 @@ def borrow_book(book_name, user_email, due_date_str=None):
     return "Success"
 
 def return_book(book_name, user_email):
-    conn = sqlite3.connect("credentials.db")
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     
     cursor.execute("SELECT * FROM active_borrows WHERE book_name = ? AND borrower_email = ?", (book_name, user_email))
@@ -183,7 +190,7 @@ def return_book(book_name, user_email):
 # History and fines
 
 def get_user_history(email):
-    conn = sqlite3.connect("credentials.db")
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM borrow_history WHERE borrower_email = ?", (email,))
     data = cursor.fetchall()
@@ -191,7 +198,7 @@ def get_user_history(email):
     return data
 
 def get_all_active_borrows():
-    conn = sqlite3.connect("credentials.db")
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM active_borrows")
     data = cursor.fetchall()
@@ -199,7 +206,7 @@ def get_all_active_borrows():
     return data
 
 def get_user_active_fines(email):
-    conn = sqlite3.connect("credentials.db")
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM active_borrows WHERE borrower_email = ? AND fine > 0", (email,))
     data = cursor.fetchall()
@@ -207,7 +214,7 @@ def get_user_active_fines(email):
     return data
 
 def get_all_fines():
-    conn = sqlite3.connect("credentials.db")
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM active_borrows WHERE fine > 0")
     data = cursor.fetchall()
@@ -215,7 +222,7 @@ def get_all_fines():
     return data
 
 def refresh_fines():
-    conn = sqlite3.connect("credentials.db")
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     today = datetime.date.today()
     cursor.execute("SELECT rowid, return_date FROM active_borrows")
@@ -232,7 +239,6 @@ def refresh_fines():
                 cursor.execute("UPDATE active_borrows SET fine = ? WHERE rowid = ?", (fine_amount, row_id))
         except:
             pass
-            
     conn.commit()
     conn.close()
 

@@ -1,4 +1,5 @@
 
+
 def librarian_dashboard():
     from PySide6.QtCore import (QCoreApplication, QMetaObject, Qt)
     from PySide6.QtGui import (QCursor)
@@ -21,7 +22,7 @@ def librarian_dashboard():
             self.mainLayout.setSpacing(0)
             self.mainLayout.setContentsMargins(0, 0, 0, 0)
 
-            # Left sidebar
+            # Sidebar
             self.sidebarFrame = QFrame(self.centralwidget)
             self.sidebarFrame.setMinimumWidth(260)
             self.sidebarFrame.setMaximumWidth(260)
@@ -83,9 +84,16 @@ def librarian_dashboard():
 
             self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
             self.sidebarLayout.addItem(self.verticalSpacer)
+
+            # Logout
+            self.btnLogout = QPushButton("  Logout", self.sidebarFrame)
+            self.btnLogout.setCursor(QCursor(Qt.PointingHandCursor))
+            self.btnLogout.setStyleSheet(sidebar_btn_style)
+            self.sidebarLayout.addWidget(self.btnLogout)
+
             self.mainLayout.addWidget(self.sidebarFrame)
 
-            # Content in the right
+           
             self.stackedWidget = QStackedWidget(self.centralwidget)
             self.stackedWidget.setStyleSheet(u"background-color: #f4f6f9;")
 
@@ -98,18 +106,26 @@ def librarian_dashboard():
             lbl.setStyleSheet("font-size: 24px; font-weight: bold; color: #2c3e50;")
             self.layout_m_books.addWidget(lbl)
 
-            self.bookNameInput = QLineEdit(self.page_manage_books)
-            self.bookNameInput.setPlaceholderText("Enter Book Name...")
-            self.bookNameInput.setStyleSheet("padding: 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 5px;")
-            self.layout_m_books.addWidget(self.bookNameInput)
+            # Book Inputs
+            inputLayout = QHBoxLayout()
+            self.bookNameInput = QLineEdit()
+            self.bookNameInput.setPlaceholderText("Book Name")
+            self.isbnInput = QLineEdit()
+            self.isbnInput.setPlaceholderText("ISBN")
+            self.authorInput = QLineEdit()
+            self.authorInput.setPlaceholderText("Author Name")
+            
+            inputLayout.addWidget(self.bookNameInput)
+            inputLayout.addWidget(self.isbnInput)
+            inputLayout.addWidget(self.authorInput)
+            self.layout_m_books.addLayout(inputLayout)
 
-            # Buttons
             btnLayout = QHBoxLayout()
             self.btnAddBook = QPushButton("Add Book", self.page_manage_books)
             self.btnAddBook.setStyleSheet("background-color: #27ae60; color: white; padding: 10px; border-radius: 5px; font-weight: bold;")
             self.btnAddBook.setCursor(QCursor(Qt.PointingHandCursor))
             
-            self.btnRemoveBook = QPushButton("Remove Book", self.page_manage_books)
+            self.btnRemoveBook = QPushButton("Remove Book (by Name)", self.page_manage_books)
             self.btnRemoveBook.setStyleSheet("background-color: #c0392b; color: white; padding: 10px; border-radius: 5px; font-weight: bold;")
             self.btnRemoveBook.setCursor(QCursor(Qt.PointingHandCursor))
 
@@ -117,10 +133,10 @@ def librarian_dashboard():
             btnLayout.addWidget(self.btnRemoveBook)
             self.layout_m_books.addLayout(btnLayout)
 
-            # Adding the Catalog Table here
+            # Mini Catalog Table
             self.tableBooksMini = QTableWidget()
-            self.tableBooksMini.setColumnCount(2)
-            self.tableBooksMini.setHorizontalHeaderLabels(["Book Name", "Status"])
+            self.tableBooksMini.setColumnCount(4)
+            self.tableBooksMini.setHorizontalHeaderLabels(["Book Name", "Status", "ISBN", "Author"])
             self.tableBooksMini.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
             self.layout_m_books.addWidget(self.tableBooksMini)
 
@@ -135,7 +151,7 @@ def librarian_dashboard():
             lbl2.setStyleSheet("font-size: 24px; font-weight: bold; color: #2c3e50;")
             self.layout_m_members.addWidget(lbl2)
 
-            # Remove Member Section
+            
             removeLayout = QHBoxLayout()
             self.inputMemberEmail = QLineEdit()
             self.inputMemberEmail.setPlaceholderText("Enter Member Email to Remove")
@@ -146,13 +162,13 @@ def librarian_dashboard():
             self.layout_m_members.addLayout(removeLayout)
 
             self.tableMembers = QTableWidget()
-            self.tableMembers.setColumnCount(3)
-            self.tableMembers.setHorizontalHeaderLabels(["First Name", "Last Name", "Email"])
+            self.tableMembers.setColumnCount(5)
+            self.tableMembers.setHorizontalHeaderLabels(["First Name", "Last Name", "Email", "Phone", "Role"])
             self.tableMembers.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
             self.layout_m_members.addWidget(self.tableMembers)
             self.stackedWidget.addWidget(self.page_manage_members)
 
-            # Borrow history
+            # Borrow History
             self.page_history = QWidget()
             self.layout_history = QVBoxLayout(self.page_history)
             self.layout_history.setContentsMargins(40,40,40,40)
@@ -168,7 +184,7 @@ def librarian_dashboard():
             self.layout_history.addWidget(self.tableHistory)
             self.stackedWidget.addWidget(self.page_history)
 
-            # transaction and fines
+            # TRANSACTIONS (Fines)
             self.page_transactions = QWidget()
             self.layout_trans = QVBoxLayout(self.page_transactions)
             self.layout_trans.setContentsMargins(40,40,40,40)
@@ -189,18 +205,18 @@ def librarian_dashboard():
             self.layout_trans.addWidget(self.tableFines)
             self.stackedWidget.addWidget(self.page_transactions)
 
-            # Catalog
+           
             self.page_catalog = QWidget()
             self.layout_catalog = QVBoxLayout(self.page_catalog)
             self.layout_catalog.setContentsMargins(40,40,40,40)
 
-            lbl5 = QLabel("Book Catalog", self.page_catalog)
+            lbl5 = QLabel("Full Book Catalog", self.page_catalog)
             lbl5.setStyleSheet("font-size: 24px; font-weight: bold; color: #2c3e50;")
             self.layout_catalog.addWidget(lbl5)
 
             self.tableCatalog = QTableWidget()
-            self.tableCatalog.setColumnCount(2)
-            self.tableCatalog.setHorizontalHeaderLabels(["Book Name", "Status"])
+            self.tableCatalog.setColumnCount(4)
+            self.tableCatalog.setHorizontalHeaderLabels(["Book Name", "Status", "ISBN", "Author"])
             self.tableCatalog.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
             self.layout_catalog.addWidget(self.tableCatalog)
             self.stackedWidget.addWidget(self.page_catalog)
@@ -210,38 +226,49 @@ def librarian_dashboard():
             self.retranslateUi(self.MainWindow)
             QMetaObject.connectSlotsByName(self.MainWindow)
 
-            # Connections
+            
             self.lmanage_books.clicked.connect(lambda: self.switch_page(0))
             self.lmanage_members.clicked.connect(lambda: self.switch_page(1))
             self.lborrow_history.clicked.connect(lambda: self.switch_page(2))
             self.ltransactions.clicked.connect(lambda: self.switch_page(3))
             self.lbook_catalog.clicked.connect(lambda: self.switch_page(4))
+            self.btnLogout.clicked.connect(self.logout)
 
-            # Feature Logics
             self.btnAddBook.clicked.connect(self.add_book_logic)
             self.btnRemoveBook.clicked.connect(self.remove_book_logic)
-            self.btnRefreshFines.clicked.connect(self.refresh_fines_logic)
             self.btnRemoveMember.clicked.connect(self.remove_member_logic)
+            self.btnRefreshFines.clicked.connect(self.refresh_fines_logic)
+
+            # Initial Load
+            self.load_catalog_mini()
 
         def retranslateUi(self, MainWindow):
             MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Librarian Dashboard", None))
 
+        def logout(self):
+            import sys, subprocess
+            self.MainWindow.close()
+            subprocess.Popen([sys.executable, 'main.py'])
+
         def switch_page(self, index):
             self.stackedWidget.setCurrentIndex(index)
-            # Reload data when switching pages to keep it fresh
             if index == 0: self.load_catalog_mini()
             if index == 1: self.load_members()
             if index == 2: self.load_history()
             if index == 3: self.load_fines()
             if index == 4: self.load_catalog()
 
-        # Functions
+        # 
         def add_book_logic(self):
             name = self.bookNameInput.text()
+            isbn = self.isbnInput.text()
+            auth = self.authorInput.text()
             if name:
-                res = database.add_book(name)
+                res = database.add_book(name, isbn, auth)
                 QMessageBox.information(self.MainWindow, "Info", res)
                 self.bookNameInput.clear()
+                self.isbnInput.clear()
+                self.authorInput.clear()
                 self.load_catalog_mini()
 
         def remove_book_logic(self):
@@ -273,7 +300,6 @@ def librarian_dashboard():
             self.tableHistory.setRowCount(0)
             for row_num, row_data in enumerate(data):
                 self.tableHistory.insertRow(row_num)
-                # row_data: (book, email, borrow_date, return_date, fine)
                 self.tableHistory.setItem(row_num, 0, QTableWidgetItem(str(row_data[0])))
                 self.tableHistory.setItem(row_num, 1, QTableWidgetItem(str(row_data[1])))
                 self.tableHistory.setItem(row_num, 2, QTableWidgetItem(str(row_data[2])))

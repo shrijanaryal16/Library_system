@@ -1,19 +1,22 @@
 
-def forth():
+def forth(role_type): # Accepts role
     from PySide6.QtCore import (QCoreApplication, QMetaObject, Qt)
     from PySide6.QtGui import (QCursor)
     from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, 
                                    QLabel, QPushButton, QLineEdit, QSpacerItem, 
                                    QSizePolicy, QScrollArea, QFrame, QMessageBox)
     import database
+    import re
 
     class Ui_MainWindow(object):
         def setupUi(self, MainWindow):
             self.MainWindow = MainWindow
+            self.current_role = role_type # Store role to save in DB
+
             if not self.MainWindow.objectName():
                 self.MainWindow.setObjectName(u"MainWindow")
             
-            self.MainWindow.resize(600, 750)
+            self.MainWindow.resize(600, 800)
             self.MainWindow.setStyleSheet(u"QMainWindow { background-color: #f4f6f9; }")
 
             self.centralwidget = QWidget(self.MainWindow)
@@ -32,29 +35,13 @@ def forth():
 
             self.titleLabel = QLabel(self.scrollContent)
             self.titleLabel.setAlignment(Qt.AlignCenter)
-            self.titleLabel.setText(u"Create Account")
+            self.titleLabel.setText(f"Create {self.current_role.capitalize()} Account")
             self.titleLabel.setStyleSheet(u"color: #2c3e50; font-family: 'Segoe UI'; font-size: 28px; font-weight: bold;")
             self.scrollLayout.addWidget(self.titleLabel)
 
-            self.subtitleLabel = QLabel(self.scrollContent)
-            self.subtitleLabel.setAlignment(Qt.AlignCenter)
-            self.subtitleLabel.setText(u"Fill in your details to register.")
-            self.subtitleLabel.setStyleSheet(u"color: #7f8c8d; font-family: 'Segoe UI'; font-size: 14px; margin-bottom: 20px;")
-            self.scrollLayout.addWidget(self.subtitleLabel)
-
             input_style = u"""
-            QLineEdit {
-                border: 2px solid #e0e0e0;
-                border-radius: 10px;
-                padding: 10px;
-                font-family: 'Segoe UI';
-                font-size: 14px;
-                background-color: #ffffff;
-                color: #34495e;
-            }
-            QLineEdit:focus {
-                border: 2px solid #3498db;
-            }
+            QLineEdit { border: 2px solid #e0e0e0; border-radius: 10px; padding: 10px; font-size: 14px; background-color: white; }
+            QLineEdit:focus { border: 2px solid #3498db; }
             """
             label_style = u"color: #34495e; font-family: 'Segoe UI'; font-size: 14px; font-weight: 600; margin-top: 5px;"
 
@@ -76,8 +63,18 @@ def forth():
             self.eid.setStyleSheet(label_style)
             self.scrollLayout.addWidget(self.eid)
             self.eidText = QLineEdit(self.scrollContent)
+            self.eidText.setPlaceholderText("user@example.com")
             self.eidText.setStyleSheet(input_style)
             self.scrollLayout.addWidget(self.eidText)
+
+            # Added Phone Field
+            self.phone = QLabel("Phone Number", self.scrollContent)
+            self.phone.setStyleSheet(label_style)
+            self.scrollLayout.addWidget(self.phone)
+            self.phoneText = QLineEdit(self.scrollContent)
+            self.phoneText.setPlaceholderText("(123)456-7890")
+            self.phoneText.setStyleSheet(input_style)
+            self.scrollLayout.addWidget(self.phoneText)
 
             self.zid = QLabel("Zip Code", self.scrollContent)
             self.zid.setStyleSheet(label_style)
@@ -108,21 +105,16 @@ def forth():
             self.caccountButton = QPushButton("Create Account", self.scrollContent)
             self.caccountButton.setCursor(QCursor(Qt.PointingHandCursor))
             self.caccountButton.setStyleSheet(u"""
-            QPushButton {
-                background-color: #27ae60;
-                border: none;
-                border-radius: 10px;
-                color: white;
-                font-family: 'Segoe UI';
-                font-size: 16px;
-                font-weight: bold;
-                padding: 15px;
-            }
-            QPushButton:hover {
-                background-color: #2ecc71;
-            }
+            QPushButton { background-color: #27ae60; border: none; border-radius: 10px; color: white; font-size: 16px; font-weight: bold; padding: 15px; }
+            QPushButton:hover { background-color: #2ecc71; }
             """)
             self.scrollLayout.addWidget(self.caccountButton)
+
+            # Back Button
+            self.btnBack = QPushButton("Go Back", self.scrollContent)
+            self.btnBack.setCursor(QCursor(Qt.PointingHandCursor))
+            self.btnBack.setStyleSheet("background-color: transparent; color: #7f8c8d; border: none; margin-top: 10px;")
+            self.scrollLayout.addWidget(self.btnBack)
 
             self.scrollArea.setWidget(self.scrollContent)
             self.mainLayout.addWidget(self.scrollArea)
@@ -131,25 +123,47 @@ def forth():
             QMetaObject.connectSlotsByName(self.MainWindow)
 
             self.caccountButton.clicked.connect(self.register)
+            self.btnBack.clicked.connect(self.goBack)
             self.new_window = None
 
         def register(self):
             fname = self.fnameText.text()
             lname = self.lnameText.text()
             email = self.eidText.text()
+            phone = self.phoneText.text()
             zip_c = self.zidText.text()
             pass1 = self.cpasswordtext.text()
             pass2 = self.rpasswordText.text()
 
-            if not fname or not lname or not email or not zip_c or not pass1:
+            # Regex 
+            # We are using a very simple logical way of doing regex
+            # Although there are few libraries out there which can do better and more efficiently
+            name_regex = r"^[a-zA-Z ]{2,}$"
+            email_regex = r"^[a-zA-Z0-9-_.]+@[a-zA-Z-]+\.[a-zA-Z]{2,}$"
+            # Adjusted phone regex for Python re compatibility
+            phone_regex = r"^[(]{1}[0-9]{3}[)]{1}[0-9]{3}[-]{1}[0-9]{4}$"
+
+            if not all([fname, lname, email, phone, zip_c, pass1]):
                 QMessageBox.warning(self.MainWindow, "Error", "Please fill in all fields.")
+                return
+
+            # Validate
+            if not re.match(name_regex, fname) or not re.match(name_regex, lname):
+                QMessageBox.warning(self.MainWindow, "Format Error", "Names must be at least 2 letters.")
+                return
+            if not re.match(email_regex, email):
+                QMessageBox.warning(self.MainWindow, "Format Error", "Invalid Email Format.")
+                return
+            if not re.match(phone_regex, phone):
+                QMessageBox.warning(self.MainWindow, "Format Error", "Phone must be (xxx)xxx-xxxx")
                 return
 
             if pass1 != pass2:
                 QMessageBox.warning(self.MainWindow, "Error", "Passwords do not match!")
                 return
 
-            result = database.insert_student(fname, lname, email, zip_c, pass1)
+            # Insert with ROLE and PHONE
+            result = database.insert_student(fname, lname, email, zip_c, pass1, phone, self.current_role)
 
             if result == "Success":
                 QMessageBox.information(self.MainWindow, "Success", "Account created successfully!")
@@ -159,8 +173,13 @@ def forth():
 
         def goToLogin(self):
             from ui.thirdpage import third
-            # New account = User role by default
-            self.new_window = third("user") 
+            self.new_window = third(self.current_role)
+            self.new_window.show()
+            self.MainWindow.close()
+
+        def goBack(self):
+            from ui.secondpage import second
+            self.new_window = second(self.current_role)
             self.new_window.show()
             self.MainWindow.close()
 

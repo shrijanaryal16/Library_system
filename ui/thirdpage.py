@@ -1,4 +1,5 @@
 
+
 def third(role_type):
     from PySide6.QtCore import (QCoreApplication, QMetaObject, Qt)
     from PySide6.QtGui import (QCursor)
@@ -6,6 +7,7 @@ def third(role_type):
                                    QLabel, QPushButton, QLineEdit, QSpacerItem, 
                                    QSizePolicy, QMessageBox)
     import database
+    import re # Import Regex
 
     class Ui_MainWindow(object):
         def setupUi(self, MainWindow):
@@ -15,7 +17,7 @@ def third(role_type):
             if not self.MainWindow.objectName():
                 self.MainWindow.setObjectName(u"MainWindow")
 
-            self.MainWindow.resize(600, 500)
+            self.MainWindow.resize(600, 550)
             self.MainWindow.setStyleSheet(u"QMainWindow { background-color: #f4f6f9; }")
 
             self.centralwidget = QWidget(self.MainWindow)
@@ -94,6 +96,13 @@ def third(role_type):
             }
             """)
             self.verticalLayout.addWidget(self.loginButton)
+
+            # Adding the back thing
+            self.btnBack = QPushButton("Go Back", self.centralwidget)
+            self.btnBack.setCursor(QCursor(Qt.PointingHandCursor))
+            self.btnBack.setStyleSheet("background-color: transparent; color: #7f8c8d; border: none; margin-top: 10px;")
+            self.verticalLayout.addWidget(self.btnBack, alignment=Qt.AlignCenter)
+
             self.verticalSpacer2 = QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
             self.verticalLayout.addItem(self.verticalSpacer2)
 
@@ -102,24 +111,31 @@ def third(role_type):
             QMetaObject.connectSlotsByName(self.MainWindow)
 
             self.loginButton.clicked.connect(self.validateLogin)
+            self.btnBack.clicked.connect(self.goBack)
             self.new_window = None
 
         def validateLogin(self):
             email = self.emailText.text()
             password = self.passwordText.text()
 
+            # Regex
+            email_regex = r"^[a-zA-Z0-9-_.]+@[a-zA-Z-]+\.[a-zA-Z]{2,}$"
+            
             if not email or not password:
                 QMessageBox.warning(self.MainWindow, "Error", "Please enter both email and password.")
                 return
 
-            if database.check_login(email, password):
+            if not re.match(email_regex, email):
+                QMessageBox.warning(self.MainWindow, "Format Error", "Invalid Email Format.\nEx: user@example.com")
+                return
+
+            # Checking the role (librarian or user)
+            if database.check_login(email, password, self.current_role):
                 print(f"Login Successful as {self.current_role}")
                 
                 if self.current_role == "user":
                     from ui.user import user_dashboard
-                    # Email is passed here
                     self.new_window = user_dashboard(email)
-                
                 elif self.current_role == "librarian":
                     from ui.librarian import librarian_dashboard
                     self.new_window = librarian_dashboard()
@@ -127,10 +143,17 @@ def third(role_type):
                 self.new_window.show()
                 self.MainWindow.close()
             else:
-                QMessageBox.warning(self.MainWindow, "Login Failed", "Invalid email or password.")
+                QMessageBox.warning(self.MainWindow, "Login Failed", "Invalid credentials or Role mismatch.")
+
+        def goBack(self):
+            from ui.secondpage import second
+            self.new_window = second(self.current_role)
+            self.new_window.show()
+            self.MainWindow.close()
 
     window = QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(window)
     window.ui = ui 
     return window
+
