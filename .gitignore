@@ -8,3 +8,5 @@ echo ".env" >> .gitignore
 
 
 cat .gitignore
+
+__pycache__/** 
