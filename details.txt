@@ -1,3 +1,5 @@
+This page has been created just to help in navigating few things while developing ui
+
 firstpage.py, firstpage.ui:
 Object names:
 textBrowser
